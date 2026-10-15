@@ -1,0 +1,271 @@
+import streamlit as st
+from datetime import datetime, timezone
+from PIL import Image
+import io
+
+st.set_page_config(
+    page_title="AI Forex OTC Analysis Bot",
+    page_icon="📊",
+    layout="wide"
+)
+
+# -------------------------------
+# APP HEADER
+# -------------------------------
+
+st.title("📊 AI Forex OTC Analysis Bot")
+st.caption("Chart Screenshot Analysis • Technical Indicators • OTC Data Status")
+
+st.warning(
+    "Demo tool: Quotex OTC live data abhi connected nahi hai. "
+    "Koi bhi signal guaranteed profit nahi deta."
+)
+
+# -------------------------------
+# SIDEBAR SETTINGS
+# -------------------------------
+
+st.sidebar.header("⚙️ Analysis Settings")
+
+pair = st.sidebar.selectbox(
+    "Select OTC Pair",
+    [
+        "EUR/AUD OTC",
+        "EUR/USD OTC",
+        "GBP/USD OTC",
+        "USD/JPY OTC",
+        "GBP/JPY OTC"
+    ]
+)
+
+timeframe = st.sidebar.selectbox(
+    "Chart Timeframe",
+    ["1 minute", "5 minutes", "15 minutes"]
+)
+
+analysis_mode = st.sidebar.radio(
+    "Analysis Mode",
+    [
+        "Screenshot Analysis",
+        "Manual Candle Analysis",
+        "Live Data Status"
+    ]
+)
+
+st.divider()
+
+# -------------------------------
+# LIVE DATA STATUS
+# -------------------------------
+
+st.subheader("🌐 Live OTC Data Connection")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.metric("Selected Pair", pair)
+
+with col2:
+    st.metric("Timeframe", timeframe)
+
+with col3:
+    st.metric("Live Data", "Not Connected")
+
+st.info(
+    "Quotex OTC ka live feed abhi available nahi hai. "
+    "Live prices ya real-time signals ka dawa nahi kiya ja raha."
+)
+
+# -------------------------------
+# SCREENSHOT ANALYSIS
+# -------------------------------
+
+if analysis_mode == "Screenshot Analysis":
+
+    st.header("📸 Upload OTC Chart Screenshot")
+
+    st.write(
+        "Mobile se Quotex chart ka screenshot lo aur yahan upload karo."
+    )
+
+    uploaded_file = st.file_uploader(
+        "Choose chart screenshot",
+        type=["png", "jpg", "jpeg"]
+    )
+
+    if uploaded_file is not None:
+
+        try:
+            image = Image.open(uploaded_file)
+            image.verify()
+
+            uploaded_file.seek(0)
+            image = Image.open(uploaded_file).convert("RGB")
+
+            st.image(
+                image,
+                caption=f"{pair} — Uploaded Chart",
+                use_container_width=True
+            )
+
+            st.success("Screenshot successfully upload ho gaya.")
+
+            st.subheader("🔍 Image Information")
+
+            img_col1, img_col2 = st.columns(2)
+
+            with img_col1:
+                st.write(f"**Image width:** {image.width} pixels")
+
+            with img_col2:
+                st.write(f"**Image height:** {image.height} pixels")
+
+            st.warning(
+                "Screenshot upload successful hai, lekin is version mein "
+                "AI vision model connected nahi hai. Image ko dekh kar "
+                "automatic CALL/PUT prediction abhi generate nahi hoti."
+            )
+
+            st.caption(
+                "Accurate analysis ke liye chart ke candles, price scale, "
+                "timeframe aur indicators ko reliably read karna zaroori hai."
+            )
+
+        except Exception:
+            st.error(
+                "Image read nahi ho saki. PNG ya JPG screenshot dobara upload karo."
+            )
+
+    else:
+        st.info("Analysis shuru karne ke liye screenshot upload karo.")
+
+# -------------------------------
+# MANUAL CANDLE ANALYSIS
+# -------------------------------
+
+elif analysis_mode == "Manual Candle Analysis":
+
+    st.header("🕯️ Manual Candle Analysis")
+
+    st.write(
+        "Chart ki recent candles ko dekh kar unki direction select karo. "
+        "Yeh simplified educational check hai, AI prediction nahi."
+    )
+
+    candle1 = st.selectbox(
+        "Latest completed candle",
+        ["Bullish (Green)", "Bearish (Red)", "Doji / Unclear"]
+    )
+
+    candle2 = st.selectbox(
+        "Previous completed candle",
+        ["Bullish (Green)", "Bearish (Red)", "Doji / Unclear"]
+    )
+
+    trend = st.selectbox(
+        "Overall chart trend",
+        ["Uptrend", "Downtrend", "Sideways / Unclear"]
+    )
+
+    rsi_value = st.number_input(
+        "RSI (14) — chart se value enter karo",
+        min_value=0.0,
+        max_value=100.0,
+        value=50.0,
+        step=1.0
+    )
+
+    if st.button("🔎 Review Technical Conditions"):
+
+        st.subheader("📋 Technical Review")
+
+        st.write(f"**Pair:** {pair}")
+        st.write(f"**Timeframe:** {timeframe}")
+        st.write(f"**Latest candle:** {candle1}")
+        st.write(f"**Previous candle:** {candle2}")
+        st.write(f"**Selected trend:** {trend}")
+        st.write(f"**RSI (14):** {rsi_value:.1f}")
+
+        if trend == "Uptrend" and candle1 == "Bullish (Green)":
+            st.info(
+                "Bullish conditions selected. Yeh CALL ki guarantee nahi; "
+                "support, resistance aur price confirmation bhi check karo."
+            )
+
+        elif trend == "Downtrend" and candle1 == "Bearish (Red)":
+            st.info(
+                "Bearish conditions selected. Yeh PUT ki guarantee nahi; "
+                "support, resistance aur price confirmation bhi check karo."
+            )
+
+        else:
+            st.info(
+                "Conditions mixed ya incomplete hain. "
+                "Is simplified review se reliable direction confirm nahi hoti."
+            )
+
+        if rsi_value >= 70:
+            st.write(
+                "RSI 70 ya us se upar hai: traditionally overbought zone "
+                "samjha jata hai, lekin reversal confirm nahi hota."
+            )
+
+        elif rsi_value <= 30:
+            st.write(
+                "RSI 30 ya us se neeche hai: traditionally oversold zone "
+                "samjha jata hai, lekin reversal confirm nahi hota."
+            )
+
+        else:
+            st.write("RSI 30–70 ke darmiyan hai.")
+
+        st.warning(
+            "Yeh simplified technical review hai, verified trading signal nahi."
+        )
+
+# -------------------------------
+# LIVE DATA STATUS
+# -------------------------------
+
+elif analysis_mode == "Live Data Status":
+
+    st.header("🌐 Live Data Connection")
+
+    st.write(f"**Selected pair:** {pair}")
+    st.write(f"**Timeframe:** {timeframe}")
+
+    st.error(
+        "Live OTC price feed configured nahi hai. "
+        "Isliye app live CALL/PUT signal nahi de sakti."
+    )
+
+    st.write("Live analysis activate karne ke liye:")
+    st.write("1. Authorized aur reliable data provider identify karo.")
+    st.write("2. Confirm karo ke provider specifically OTC data deta hai.")
+    st.write("3. Data feed connect aur validate karo.")
+    st.write("4. Indicators ko actual market data par calculate karo.")
+
+# -------------------------------
+# FOOTER
+# -------------------------------
+
+st.divider()
+
+st.subheader("ℹ️ System Status")
+
+st.write("• Screenshot upload: Available")
+st.write("• AI vision analysis: Not connected")
+st.write("• Manual technical review: Available")
+st.write("• RSI display: Available for manually entered values")
+st.write("• Moving Average calculation: Not implemented yet")
+st.write("• Quotex OTC live data: Not connected")
+st.write("• Automatic trading: Disabled")
+
+st.caption(
+    "Educational analysis only. Trading mein financial loss ka risk hota hai."
+)
+
+st.caption(
+    "Page opened at: "
+    + datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+)
